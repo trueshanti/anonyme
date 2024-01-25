@@ -4,7 +4,7 @@
     Anonymize IP addresses in a file while preserving country information.
     This script uses MaxMind GeoLite2 database for country information.
 
-    Copyright (C) 2023 Your Name <your.email@example.com>
+    Copyright (C) 2024 Christoph Resch <shanti@mojo.cc>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
