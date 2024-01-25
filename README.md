@@ -23,7 +23,6 @@ primarly intended to be used in logrotate's 'prerotate'-section like
         /usr/lib/rsyslog/rsyslog-rotate
     endscript
 }
-
 ...
 
 amused by the lameness of other "solutions" it let chatGPT write that ..
