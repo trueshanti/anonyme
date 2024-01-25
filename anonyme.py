@@ -4,7 +4,7 @@
     Anonymize IP addresses in a file while preserving country information.
     This script uses MaxMind GeoLite2 database for country information.
 
-    Copyright (C) 2023 Christoph Resch <shanti@mojo.cc>
+    Copyright (C) 2023 Your Name <your.email@example.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -23,16 +23,20 @@
 import sys
 import re
 import logging
+import tempfile
+import shutil
 from geoip2.database import Reader
 
 def anonymize_ipv4(ip_address):
     octets = ip_address.split('.')
+    # Keep only the first two octets and replace the last two octets with "XXX"
     anonymized_octets = octets[:2] + ['XXX', 'XXX']
     return '.'.join(anonymized_octets)
 
 def anonymize_ipv6(ip_address):
     groups = ip_address.split(':')
-    anonymized_groups = groups[:2] + ['XXXX', 'XXXX', 'XXXX', 'XXXX', 'XXXX', 'XXXX', 'XXXX', 'XXXX']
+    # Keep only the first two groups and replace the remaining groups with "XXXX"
+    anonymized_groups = groups[:2] + ['XXXX'] * (8 - len(groups))
     return ':'.join(anonymized_groups)
 
 def anonymize_ip_addresses(content, geolite_database):
@@ -62,7 +66,7 @@ def anonymize_ip_addresses(content, geolite_database):
     return anonymized_content
 
 # Set up logging
-# logging.basicConfig(filename='anonymize.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='anonymize.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Check command line arguments
 if len(sys.argv) > 1:
@@ -84,7 +88,19 @@ except Exception as e:
 # Anonymize IP addresses
 try:
     anonymized_content = anonymize_ip_addresses(content, geolite_database)
-    print(anonymized_content)
+
+    # Create a temporary file to write the anonymized content
+    temp_file = tempfile.NamedTemporaryFile(mode='w', delete=False)
+    temp_filename = temp_file.name
+
+    # Write the anonymized content to the temporary file
+    temp_file.write(anonymized_content)
+    temp_file.close()
+
+    # Replace the input file with the anonymized content
+    shutil.move(temp_filename, input_file)
+
     logging.info(f"Anonymized IP addresses in {input_file} with preserved country information.")
 except Exception as e:
     logging.error(f"An error occurred while anonymizing IP addresses: {str(e)}")
+
