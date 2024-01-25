@@ -66,7 +66,7 @@ def anonymize_ip_addresses(content, geolite_database):
     return anonymized_content
 
 # Set up logging
-logging.basicConfig(filename='anonymize.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# logging.basicConfig(filename='anonymize.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Check command line arguments
 if len(sys.argv) > 1:
