@@ -23,9 +23,13 @@
 import sys
 import re
 import logging
-import tempfile
-import shutil
+import tempfileimport shutil
 from geoip2.database import Reader
+
+# List of IP addresses to skip anonymizing
+excluded_ips = [
+    "127.0.0.1", "127.0.0.2"
+]
 
 def anonymize_ipv4(ip_address):
     octets = ip_address.split('.')
@@ -43,22 +47,25 @@ def anonymize_ip_addresses(content, geolite_database):
     # Regular expression pattern to match IPv4 and IPv6 addresses
     ip_pattern = r'\b(?:\d{1,3}\.){3}\d{1,3}\b|\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b'
 
-    anonymized_content = re.sub(ip_pattern, lambda match: anonymize_ipv4(match.group()) if '.' in match.group() else anonymize_ipv6(match.group()), content)
-
     # Create a Reader object for the GeoLite2 database
     reader = Reader(geolite_database)
 
-    # Find country information for each IP address and replace it with a placeholder
-    def replace_ip_with_country(match):
+    # Function to replace IP addresses with their anonymized version or country code
+    def replace_ip(match):
         ip_address = match.group()
+        if ip_address in excluded_ips:
+            return ip_address
         try:
             response = reader.country(ip_address)
             country_code = response.country.iso_code
             return f'[{country_code}]'
         except:
-            return match.group()
+            if '.' in ip_address:
+                return anonymize_ipv4(ip_address)
+            else:
+                return anonymize_ipv6(ip_address)
 
-    anonymized_content = re.sub(ip_pattern, replace_ip_with_country, anonymized_content)
+    anonymized_content = re.sub(ip_pattern, replace_ip, content)
 
     # Close the GeoLite2 reader
     reader.close()
@@ -66,7 +73,7 @@ def anonymize_ip_addresses(content, geolite_database):
     return anonymized_content
 
 # Set up logging
-# logging.basicConfig(filename='anonymize.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='anonymize.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Check command line arguments
 if len(sys.argv) > 1:
@@ -103,4 +110,3 @@ try:
     logging.info(f"Anonymized IP addresses in {input_file} with preserved country information.")
 except Exception as e:
     logging.error(f"An error occurred while anonymizing IP addresses: {str(e)}")
-
